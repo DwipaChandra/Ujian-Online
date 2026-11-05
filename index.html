@@ -11,14 +11,14 @@
     <link
       href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&display=swap"
       rel="stylesheet"
-    />  
+    />
 
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
       tailwind.config = {
         theme: {
-          extend: { 
+          extend: {
             fontFamily: {
               sans: [
                 '"Plus Jakarta Sans"',
@@ -48,7 +48,6 @@
 
     <style>
       body {
-        font-family: "Plus Jakarta Sans", sans-serif;
         background-color: #f8fafc;
         color: #0f172a;
         -webkit-font-smoothing: antialiased;
@@ -458,10 +457,7 @@
 
       function escapeHtml(str) {
         if (str === null || str === undefined || str === "") return "";
-        return String(str).replace(
-          HTML_ESCAPE_RE,
-          (ch) => HTML_ESCAPE_MAP[ch],
-        );
+        return String(str).replace(HTML_ESCAPE_RE, (ch) => HTML_ESCAPE_MAP[ch]);
       }
 
       /**
