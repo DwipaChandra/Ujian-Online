@@ -1,0 +1,2146 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>NILAI 100 ASTUNGKARA</title>
+
+    <!-- Google Fonts: Plus Jakarta Sans -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&display=swap"
+      rel="stylesheet"
+    />  
+
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: { 
+            fontFamily: {
+              sans: [
+                '"Plus Jakarta Sans"',
+                "system-ui",
+                "-apple-system",
+                "sans-serif",
+              ],
+            },
+            colors: {
+              surface: "#F8FAFC",
+              primary: {
+                DEFAULT: "#2563EB",
+                hover: "#1D4ED8",
+                light: "#EFF6FF",
+              },
+              eval: {
+                correct: "#10B981",
+                correctBg: "#ECFDF5",
+                wrong: "#EF4444",
+                wrongBg: "#FEF2F2",
+              },
+            },
+          },
+        },
+      };
+    </script>
+
+    <style>
+      body {
+        font-family: "Plus Jakarta Sans", sans-serif;
+        background-color: #f8fafc;
+        color: #0f172a;
+        -webkit-font-smoothing: antialiased;
+        text-rendering: optimizeSpeed;
+      }
+
+      /* Truncate 2 lines neatly */
+      .line-clamp-2 {
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+      }
+
+      /* Offscreen rendering & layout containment for long lists (FPS++) */
+      .perf-card {
+        content-visibility: auto;
+        contain-intrinsic-size: 0 260px;
+        contain: layout style;
+      }
+
+      /* GPU-accelerated tactile hover & active effects for all active buttons */
+      button:not(:disabled),
+      .btn-interactive {
+        transition:
+          transform 0.12s cubic-bezier(0.2, 0, 0, 1),
+          background-color 0.15s ease,
+          border-color 0.15s ease,
+          color 0.15s ease,
+          box-shadow 0.15s ease;
+      }
+      button:not(:disabled):hover,
+      .btn-interactive:hover {
+        transform: translateY(-1px);
+      }
+      button:not(:disabled):active,
+      .btn-interactive:active {
+        transform: translateY(0) scale(0.97);
+      }
+
+      /* Subtle custom scrollbar */
+      ::-webkit-scrollbar {
+        width: 6px;
+        height: 6px;
+      }
+      ::-webkit-scrollbar-track {
+        background: #f1f5f9;
+      }
+      ::-webkit-scrollbar-thumb {
+        background: #cbd5e1;
+        border-radius: 9999px;
+      }
+      ::-webkit-scrollbar-thumb:hover {
+        background: #94a3b8;
+      }
+
+      /* Smooth fade-in animation for views */
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+          transform: translateY(6px);
+        }
+        to {
+          opacity: 1;
+          transform: none;
+        }
+      }
+      .animate-view {
+        animation: fadeIn 0.18s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+      }
+
+      /* Shake animation for validation error */
+      @keyframes shakeError {
+        0%,
+        100% {
+          transform: translateX(0);
+        }
+        20%,
+        60% {
+          transform: translateX(-4px);
+        }
+        40%,
+        80% {
+          transform: translateX(4px);
+        }
+      }
+      .animate-shake {
+        animation: shakeError 0.35s ease-in-out;
+      }
+    </style>
+  </head>
+  <body
+    class="min-h-screen flex flex-col selection:bg-blue-600 selection:text-white"
+  >
+    <!-- STICKY NAVBAR (Khusus Halaman Soal / Editor) -->
+    <header id="app-header" class="sticky top-0 z-40 hidden"></header>
+
+    <!-- MAIN CONTENT CONTAINER -->
+    <main
+      id="app-main"
+      class="flex-1 w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8"
+    >
+      <!-- Rendered dynamically by JS -->
+    </main>
+    <!-- MODAL CONTAINER (Confirmation, Delete, Submit Exam) -->
+    <div
+      id="modal-root"
+      class="fixed inset-0 z-50 hidden items-center justify-center p-4 bg-slate-900/50 transition-opacity"
+    >
+      <!-- Modal content injected here -->
+    </div>
+
+    <!-- TOAST NOTIFICATION CONTAINER -->
+    <div
+      id="toast-root"
+      class="fixed bottom-5 right-5 z-50 flex flex-col gap-2 max-w-sm w-full pointer-events-none"
+    ></div>
+
+    <!-- HIDDEN FILE INPUT FOR IMPORT JSON -->
+    <input
+      type="file"
+      id="import-json-input"
+      accept=".json,application/json"
+      class="hidden"
+    />
+
+    <!-- APPLICATION SCRIPT (VANILLA JS MODULAR ARCHITECTURE) -->
+    <script>
+      /*************************************************************************
+       * 1. KONSTANTA & DATA DEMO BAWAAN
+       *************************************************************************/
+      const STORAGE_KEY = "sts_portal_quizzes_data";
+      const ACCENT_PALETTE = [
+        "#F59E0B", // Amber
+        "#10B981", // Emerald
+        "#6366F1", // Indigo
+        "#F43F5E", // Rose
+        "#06B6D4", // Cyan
+        "#8B5CF6", // Violet
+      ];
+      const OPTION_LETTERS = ["A", "B", "C", "D", "E"];
+      const OPTION_IDS = ["opt_a", "opt_b", "opt_c", "opt_d", "opt_e"];
+
+      const DEFAULT_SAMPLE_QUIZZES = [
+        {
+          id: "quiz_1710000000000",
+          title: "STS Pemrograman Dasar & Algoritma Kelas XI",
+          accentColor: "#6366F1",
+          createdAt: "2026-09-25",
+          questions: [
+            {
+              id: "q1",
+              questionText:
+                "Struktur algoritma yang mengeksekusi instruksi secara berurutan dari langkah pertama hingga langkah terakhir tanpa adanya lompatan atau pengulangan disebut...",
+              options: [
+                { id: "opt_a", text: "Rekursif (Recursion)" },
+                { id: "opt_b", text: "Percabangan (Selection)" },
+                { id: "opt_c", text: "Sekuensial (Sequential)" },
+                { id: "opt_d", text: "Perulangan (Iteration)" },
+                { id: "opt_e", text: "Paralelisme (Parallelism)" },
+              ],
+              correctOptionId: "opt_c",
+            },
+            {
+              id: "q2",
+              questionText:
+                "Perhatikan operasi logika berikut: (true && false) || !false. Hasil akhir dari evaluasi ekspresi boolean tersebut adalah...",
+              options: [
+                { id: "opt_a", text: "false" },
+                { id: "opt_b", text: "true" },
+                { id: "opt_c", text: "null" },
+                { id: "opt_d", text: "undefined" },
+                { id: "opt_e", text: "SyntaxError" },
+              ],
+              correctOptionId: "opt_b",
+            },
+            {
+              id: "q3",
+              questionText:
+                "Manakah tipe data di bawah ini yang paling tepat digunakan untuk menyimpan nilai rata-rata indeks prestasi siswa seperti 88.75?",
+              options: [
+                { id: "opt_a", text: "Integer" },
+                { id: "opt_b", text: "Boolean" },
+                { id: "opt_c", text: "Character" },
+                { id: "opt_d", text: "Float / Double" },
+                { id: "opt_e", text: "Array of Char" },
+              ],
+              correctOptionId: "opt_d",
+            },
+            {
+              id: "q4",
+              questionText:
+                "Dalam JavaScript modern (ES6+), keyword manakah yang digunakan untuk mendeklarasikan variabel yang nilainya bersifat konstan dan tidak dapat di-reassign kembali?",
+              options: [
+                { id: "opt_a", text: "var" },
+                { id: "opt_b", text: "let" },
+                { id: "opt_c", text: "const" },
+                { id: "opt_d", text: "static" },
+                { id: "opt_e", text: "fixed" },
+              ],
+              correctOptionId: "opt_c",
+            },
+            {
+              id: "q5",
+              questionText:
+                "Jika sebuah array dideklarasikan sebagai `const nilai = [75, 80, 92, 88, 95];`, maka cara mengakses nilai `92` adalah menggunakan indeks...",
+              options: [
+                { id: "opt_a", text: "nilai[1]" },
+                { id: "opt_b", text: "nilai[2]" },
+                { id: "opt_c", text: "nilai[3]" },
+                { id: "opt_d", text: "nilai(2)" },
+                { id: "opt_e", text: "nilai.get(3)" },
+              ],
+              correctOptionId: "opt_b",
+            },
+            {
+              id: "q6",
+              questionText:
+                "Simbol bangun ruang belah ketupat (diamond) pada diagram alir (Flowchart) berfungsi untuk merepresentasikan...",
+              options: [
+                {
+                  id: "opt_a",
+                  text: "Titik awal dan akhir program (Terminator)",
+                },
+                {
+                  id: "opt_b",
+                  text: "Proses perhitungan aritmatika (Process)",
+                },
+                { id: "opt_c", text: "Input dan Output data (Data I/O)" },
+                {
+                  id: "opt_d",
+                  text: "Pengambilan keputusan / kondisi (Decision)",
+                },
+                {
+                  id: "opt_e",
+                  text: "Inisialisasi variabel konstanta (Preparation)",
+                },
+              ],
+              correctOptionId: "opt_d",
+            },
+          ],
+        },
+        {
+          id: "quiz_1710000005000",
+          title: "STS Desain Antarmuka (UI/UX) & Web Modern",
+          accentColor: "#10B981",
+          createdAt: "2026-09-25",
+          questions: [
+            {
+              id: "q1",
+              questionText:
+                "Prinsip desain UI yang menjaga agar elemen dengan fungsi serupa memiliki tampilan visual, warna, dan perilaku yang seragam di seluruh halaman disebut...",
+              options: [
+                { id: "opt_a", text: "Affordance" },
+                { id: "opt_b", text: "Consistency (Konsistensi)" },
+                { id: "opt_c", text: "Progressive Disclosure" },
+                { id: "opt_d", text: "Skeuomorphism" },
+                { id: "opt_e", text: "Visual Noise" },
+              ],
+              correctOptionId: "opt_b",
+            },
+            {
+              id: "q2",
+              questionText:
+                "Properti CSS Flexbox yang digunakan untuk mengatur perataan elemen anak secara sejajar dengan sumbu utama (main-axis) adalah...",
+              options: [
+                { id: "opt_a", text: "align-items" },
+                { id: "opt_b", text: "justify-content" },
+                { id: "opt_c", text: "flex-wrap" },
+                { id: "opt_d", text: "align-content" },
+                { id: "opt_e", text: "place-self" },
+              ],
+              correctOptionId: "opt_b",
+            },
+            {
+              id: "q3",
+              questionText:
+                "Elemen HTML5 semantik manakah yang paling tepat digunakan untuk membungkus konten utama yang unik dari sebuah dokumen web?",
+              options: [
+                { id: "opt_a", text: "<section>" },
+                { id: "opt_b", text: "<aside>" },
+                { id: "opt_c", text: "<main>" },
+                { id: "opt_d", text: "<header>" },
+                { id: "opt_e", text: "<article>" },
+              ],
+              correctOptionId: "opt_c",
+            },
+            {
+              id: "q4",
+              questionText:
+                "Berapa rasio kontras warna minimum yang direkomendasikan standar WCAG AA untuk teks ukuran normal agar nyaman dibaca pengguna?",
+              options: [
+                { id: "opt_a", text: "1.5 : 1" },
+                { id: "opt_b", text: "2.1 : 1" },
+                { id: "opt_c", text: "3.0 : 1" },
+                { id: "opt_d", text: "4.5 : 1" },
+                { id: "opt_e", text: "10.0 : 1" },
+              ],
+              correctOptionId: "opt_d",
+            },
+          ],
+        },
+      ];
+
+      /*************************************************************************
+       * 2. STATE MANAGEMENT TERPUSAT
+       *************************************************************************/
+      const state = {
+        view: "HOME", // 'HOME' | 'EDITOR' | 'EXAM' | 'EVALUATION'
+        quizzes: [],
+        currentQuiz: null, // Quiz asli yang sedang diedit atau diujikan
+
+        // State khusus Editor
+        editorDraft: {
+          id: null,
+          title: "",
+          accentColor: ACCENT_PALETTE[0],
+          createdAt: "",
+          questions: [],
+          validationErrors: [],
+        },
+
+        // State khusus Exam Session
+        examSession: {
+          quizId: null,
+          quizTitle: "",
+          isDrillMode: false, // true jika "Ulangi Jawaban Salah Saja"
+          questions: [], // Array soal yang sudah di-shuffle urutan & opsinya
+        },
+        activeQuestionIndex: 0,
+        userAnswers: {}, // { [questionId]: selectedOptionId }
+        flaggedQuestions: {}, // { [questionId]: boolean }
+        remainingSeconds: 45 * 60, // 45 menit (2700 detik)
+        timerIntervalId: null,
+
+        // State hasil Evaluasi terakhir
+        evaluationResult: null,
+      };
+
+      /*************************************************************************
+       * 3. HELPER FUNCTIONS (LocalStorage, Fisher-Yates Shuffle, Scoring, UI)
+       *************************************************************************/
+      function loadQuizzesFromStorage() {
+        try {
+          const raw = localStorage.getItem(STORAGE_KEY);
+          if (!raw) {
+            // Tanamkan paket soal demo bawaan jika LocalStorage masih kosong
+            state.quizzes = structuredClone(DEFAULT_SAMPLE_QUIZZES);
+            saveQuizzesToStorage();
+            return;
+          }
+          const parsed = JSON.parse(raw);
+          if (Array.isArray(parsed)) {
+            state.quizzes = parsed;
+          } else {
+            state.quizzes = structuredClone(DEFAULT_SAMPLE_QUIZZES);
+            saveQuizzesToStorage();
+          }
+        } catch (err) {
+          console.error("Gagal membaca LocalStorage:", err);
+          state.quizzes = structuredClone(DEFAULT_SAMPLE_QUIZZES);
+        }
+      }
+
+      function saveQuizzesToStorage() {
+        try {
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(state.quizzes));
+        } catch (err) {
+          console.error("Gagal menyimpan ke LocalStorage:", err);
+          showToast("Gagal menyimpan data ke LocalStorage browser.", "error");
+        }
+      }
+
+      /**
+       * Algoritma Fisher-Yates Shuffle murni (tidak memutasi array asli)
+       */
+      function fisherYatesShuffle(array) {
+        const copy = [...array];
+        for (let i = copy.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [copy[i], copy[j]] = [copy[j], copy[i]];
+        }
+        return copy;
+      }
+
+      function pickRandomAccentColor() {
+        const idx = Math.floor(Math.random() * ACCENT_PALETTE.length);
+        return ACCENT_PALETTE[idx];
+      }
+
+      function getTodayISO() {
+        const now = new Date();
+        const y = now.getFullYear();
+        const m = String(now.getMonth() + 1).padStart(2, "0");
+        const d = String(now.getDate()).padStart(2, "0");
+        return `${y}-${m}-${d}`;
+      }
+
+      const HTML_ESCAPE_MAP = {
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#039;",
+      };
+      const HTML_ESCAPE_RE = /[&<>"']/g;
+
+      function escapeHtml(str) {
+        if (str === null || str === undefined || str === "") return "";
+        return String(str).replace(
+          HTML_ESCAPE_RE,
+          (ch) => HTML_ESCAPE_MAP[ch],
+        );
+      }
+
+      /**
+       * Perhitungan Skor Evaluasi
+       */
+      function calculateScore(sessionQuestions, answersMap) {
+        const total = sessionQuestions.length;
+        let correctCount = 0;
+        let wrongCount = 0;
+        let unansweredCount = 0;
+
+        const details = sessionQuestions.map((q, index) => {
+          const selectedOptionId = answersMap[q.id] || null;
+          const isUnanswered = !selectedOptionId;
+          const isCorrect =
+            !isUnanswered && selectedOptionId === q.correctOptionId;
+
+          if (isCorrect) {
+            correctCount++;
+          } else if (isUnanswered) {
+            unansweredCount++;
+          } else {
+            wrongCount++;
+          }
+
+          const userOptionObj =
+            q.options.find((o) => o.id === selectedOptionId) || null;
+          const correctOptionObj =
+            q.options.find((o) => o.id === q.correctOptionId) || null;
+
+          return {
+            number: index + 1,
+            questionId: q.id,
+            questionText: q.questionText,
+            options: q.options,
+            selectedOptionId,
+            correctOptionId: q.correctOptionId,
+            userOptionText: userOptionObj ? userOptionObj.text : null,
+            correctOptionText: correctOptionObj ? correctOptionObj.text : "-",
+            isCorrect,
+            isUnanswered,
+          };
+        });
+
+        const wrongOrEmptyCount = wrongCount + unansweredCount;
+        const rawScore = total > 0 ? (correctCount / total) * 100 : 0;
+        const finalScore = Number.isInteger(rawScore)
+          ? rawScore
+          : Number(rawScore.toFixed(1));
+        const accuracyPercent = Math.round(rawScore);
+
+        return {
+          total,
+          correctCount,
+          wrongCount,
+          unansweredCount,
+          wrongOrEmptyCount,
+          finalScore,
+          accuracyPercent,
+          details,
+        };
+      }
+
+      /**
+       * Toast Notification Helper
+       */
+      function showToast(message, type = "info") {
+        const root = document.getElementById("toast-root");
+        if (!root) return;
+
+        const colors = {
+          success: "bg-emerald-600 text-white border-emerald-700",
+          error: "bg-red-600 text-white border-red-700",
+          info: "bg-slate-800 text-white border-slate-700",
+        };
+        const iconSvg =
+          type === "success"
+            ? `<svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>`
+            : type === "error"
+              ? `<svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>`
+              : `<svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>`;
+
+        const item = document.createElement("div");
+        item.className = `pointer-events-auto flex items-center gap-2.5 px-4 py-3 rounded-xl border shadow-lg text-xs sm:text-sm font-medium animate-view ${colors[type] || colors.info}`;
+        item.innerHTML = `${iconSvg}<span>${escapeHtml(message)}</span>`;
+        root.appendChild(item);
+
+        setTimeout(() => {
+          item.style.opacity = "0";
+          item.style.transition = "opacity 0.25s ease";
+          setTimeout(() => item.remove(), 250);
+        }, 3200);
+      }
+
+      /**
+       * Modal Dialog Helper
+       */
+      function openModal(htmlContent) {
+        const modalRoot = document.getElementById("modal-root");
+        modalRoot.innerHTML = htmlContent;
+        modalRoot.classList.remove("hidden");
+        modalRoot.classList.add("flex");
+      }
+
+      function closeModal() {
+        const modalRoot = document.getElementById("modal-root");
+        modalRoot.classList.add("hidden");
+        modalRoot.classList.remove("flex");
+        modalRoot.innerHTML = "";
+      }
+
+      function renderHeader() {
+        const headerEl = document.getElementById("app-header");
+        if (!headerEl) return;
+
+        if (state.view !== "EDITOR" || !state.editorDraft) {
+          headerEl.className = "sticky top-0 z-40 hidden";
+          headerEl.innerHTML = "";
+          return;
+        }
+
+        const questions = state.editorDraft.questions || [];
+        const canAddQuestion = questions.length < 50;
+
+        headerEl.className =
+          "sticky top-0 z-40 bg-white border-b border-[#E2E8F0] shadow-2xs";
+        headerEl.innerHTML = `
+          <div class="max-w-4xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between gap-3">
+            <!-- Kiri: Kembali ke Beranda (Simbol saja di HP) -->
+            <button
+              type="button"
+              onclick="confirmCancelEditor()"
+              title="Kembali ke Beranda"
+              aria-label="Kembali ke Beranda"
+              class="inline-flex items-center justify-center gap-2 p-2.5 sm:px-3.5 sm:py-2 rounded-xl text-xs sm:text-sm font-semibold text-slate-600 hover:text-slate-900 hover:bg-slate-100 border border-[#E2E8F0]">
+              <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+              </svg>
+              <span class="hidden sm:inline">Beranda</span>
+            </button>
+
+            <!-- Kanan: Tambah Soal + Simpan Soal (Simbol saja di HP) -->
+            <div class="flex items-center gap-2 sm:gap-2.5">
+              <button
+                type="button"
+                onclick="handleAddQuestion()"
+                ${!canAddQuestion ? "disabled" : ""}
+                title="${canAddQuestion ? `Tambah Soal (${questions.length}/50)` : "Maksimal 50 Soal"}"
+                aria-label="Tambah Soal"
+                class="inline-flex items-center justify-center gap-2 p-2.5 sm:px-4 sm:py-2 rounded-xl text-xs sm:text-sm font-bold border-2 border-dashed ${
+                  canAddQuestion
+                    ? "border-[#2563EB] text-[#2563EB] bg-blue-50/50 hover:bg-blue-50"
+                    : "border-slate-200 text-slate-400 bg-slate-50 cursor-not-allowed"
+                }">
+                <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
+                <span class="hidden sm:inline">${canAddQuestion ? `Tambah (${questions.length}/50)` : "Maksimal 50 Soal"}</span>
+              </button>
+
+              <button
+                type="button"
+                onclick="handleSaveQuiz()"
+                title="Simpan Paket Soal"
+                aria-label="Simpan Paket Soal"
+                class="inline-flex items-center justify-center gap-2 p-2.5 sm:px-5 sm:py-2 rounded-xl text-xs sm:text-sm font-bold text-white bg-[#2563EB] hover:bg-[#1D4ED8] shadow-xs">
+                <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+                <span class="hidden sm:inline">Simpan</span>
+              </button>
+            </div>
+          </div>
+        `;
+      }
+
+      /*************************************************************************
+       * 5. VIEW A: HALAMAN BERANDA (HOME VIEW)
+       *************************************************************************/
+      function navigateToHome() {
+        if (typeof stopExamTimer === "function") stopExamTimer();
+        state.view = "HOME";
+        state.currentQuiz = null;
+        renderApp();
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      }
+
+      function renderHome() {
+        const mainEl = document.getElementById("app-main");
+
+        const cardsHtml = state.quizzes
+          .map((quiz) => {
+            const qCount = Array.isArray(quiz.questions)
+              ? quiz.questions.length
+              : 0;
+            const accent = quiz.accentColor || "#2563EB";
+            return `
+          <article class="group relative bg-white rounded-2xl border border-[#E2E8F0] shadow-sm hover:shadow-md transition-all duration-200 flex flex-col overflow-hidden">
+            <!-- Garis Aksen Atas 4px -->
+            <div class="h-1 w-full" style="background-color: ${escapeHtml(accent)};"></div>
+
+            <div class="p-5 flex-1 flex flex-col justify-between gap-4">
+              <div>
+                <div class="flex items-center justify-between gap-2 mb-2.5">
+                  <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-slate-100 text-slate-700 border border-slate-200">
+                    <svg class="w-3.5 h-3.5 text-slate-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+                    ${qCount} Soal
+                  </span>
+                  <span class="text-[11px] font-medium text-slate-400">${escapeHtml(quiz.createdAt || "-")}</span>
+                </div>
+
+                <h2 class="text-lg sm:text-xl font-extrabold text-slate-900 line-clamp-2 leading-snug group-hover:text-[#2563EB] transition-colors" title="${escapeHtml(quiz.title)}">
+                  ${escapeHtml(quiz.title)}
+                </h2>
+              </div>
+
+              <div class="pt-3 border-t border-slate-100 flex items-center justify-between gap-2">
+                <button onclick="startExam('${escapeHtml(quiz.id)}')"
+                  class="flex-1 inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl text-xs font-semibold text-white bg-[#2563EB] hover:bg-[#1D4ED8] shadow-2xs transition">
+                  <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clip-rule="evenodd"/></svg>
+                  <span>Mulai Ujian</span>
+                </button>
+
+                <div class="flex items-center gap-1">
+                  <button onclick="openEditorForEdit('${escapeHtml(quiz.id)}')"
+                    class="p-2.5 rounded-xl text-slate-600 hover:text-[#2563EB] hover:bg-blue-50 border border-[#E2E8F0] transition"
+                    title="Edit Paket Soal" aria-label="Edit Paket Soal">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                    </svg>
+                  </button>
+
+                  <button onclick="confirmDeleteQuiz('${escapeHtml(quiz.id)}')"
+                    class="p-2.5 rounded-xl text-slate-600 hover:text-red-600 hover:bg-red-50 border border-[#E2E8F0] transition"
+                    title="Hapus Paket Soal" aria-label="Hapus Paket Soal">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                    </svg>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </article>
+        `;
+          })
+          .join("");
+
+        mainEl.innerHTML = `
+        <section class="animate-view">
+          <!-- Intro Title Row -->
+          <div class="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div>
+              <h2 class="text-xl sm:text-2xl font-extrabold text-slate-900 tracking-tight">Om Swastyastu, I Gede Made Dwipa Chandra Sedana</h2>
+              <p class="text-xs sm:text-sm text-slate-500 mt-0.5">
+                Tips: Periksa kembali dengan cermat sebelum mengirimkan soal.
+              </p>
+            </div>
+
+            <!-- Tombol Impor JSON, Overwrite JSON & Ekspor JSON -->
+            <div class="flex flex-wrap items-center gap-2 shrink-0">
+              <button
+                type="button"
+                onclick="triggerImportJSON('replace')"
+                class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold text-slate-700 bg-white hover:bg-slate-50 border border-[#E2E8F0] shadow-2xs transition"
+                title="Impor paket soal baru dan hapus semua kartu soal sebelumnya">
+                <svg class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/>
+                </svg>
+                <span>Impor JSON</span>
+              </button>
+
+              <button
+                type="button"
+                onclick="triggerImportJSON('overwrite')"
+                class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold text-emerald-700 bg-emerald-50/70 hover:bg-emerald-100/80 border border-emerald-200 shadow-2xs transition"
+                title="Tambahkan paket soal dari JSON tanpa menghapus kartu soal sebelumnya">
+                <svg class="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+                <span>Overwrite JSON</span>
+              </button>
+
+              <button
+                type="button"
+                onclick="handleExportJSON()"
+                class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold text-[#2563EB] bg-blue-50/70 hover:bg-blue-100/80 border border-blue-200 shadow-2xs transition"
+                title="Ekspor semua paket soal ke file JSON">
+                <svg class="w-4 h-4 text-[#2563EB]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                </svg>
+                <span>Ekspor JSON</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Grid Kartu Soal -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+            <!-- Kartu Tambah Baru (+) -->
+            <button onclick="openEditorForCreate()"
+              class="group min-h-[190px] rounded-2xl border-2 border border-slate-300 hover:border-[#2563EB] bg-white/60 hover:bg-blue-50/40 p-6 flex flex-col items-center justify-center text-center transition-all duration-200 shadow-2xs">
+              <div class="w-12 h-12 rounded-2xl bg-slate-100 group-hover:bg-[#2563EB] text-slate-500 group-hover:text-white flex items-center justify-center transition-colors mb-3 shadow-2xs">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/>
+                </svg>
+              </div>
+              <span class="text-sm font-bold text-slate-600 group-hover:text-[#2563EB] transition-colors">Buat Soal </span>
+            </button>
+
+            <!-- Daftar Kartu Paket Soal -->
+            ${cardsHtml}
+          </div>
+        </section>
+      `;
+      }
+
+      function confirmDeleteQuiz(quizId) {
+        const target = state.quizzes.find((q) => q.id === quizId);
+        if (!target) return;
+
+        openModal(`
+        <div class="bg-white rounded-2xl border border-[#E2E8F0] shadow-xl max-w-md w-full p-6 animate-view">
+          <div class="w-11 h-11 rounded-xl bg-red-50 border border-red-100 text-red-600 flex items-center justify-center mb-4">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+            </svg>
+          </div>
+          <h3 class="text-base font-bold text-slate-900">Hapus Paket Soal?</h3>
+          <p class="text-xs sm:text-sm text-slate-600 mt-1.5 leading-relaxed">
+            Anda yakin ingin menghapus paket <strong>"${escapeHtml(target.title)}"</strong> (${target.questions.length} soal)? Tindakan ini tidak dapat dibatalkan.
+          </p>
+          <div class="mt-6 flex items-center justify-end gap-2.5">
+            <button onclick="closeModal()" class="px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-100 border border-[#E2E8F0] transition">
+              Batal
+            </button>
+            <button onclick="executeDeleteQuiz('${escapeHtml(quizId)}')" class="px-4 py-2 rounded-xl text-xs font-semibold text-white bg-red-600 hover:bg-red-700 shadow-xs transition">
+              Ya, Hapus Paket
+            </button>
+          </div>
+        </div>
+      `);
+      }
+
+      function executeDeleteQuiz(quizId) {
+        state.quizzes = state.quizzes.filter((q) => q.id !== quizId);
+        saveQuizzesToStorage();
+        closeModal();
+        renderApp();
+        showToast("Paket soal berhasil dihapus.", "info");
+      }
+
+      /*************************************************************************
+       * 6. EXPORT & IMPORT JSON HANDLERS
+       *************************************************************************/
+      let currentImportMode = "replace"; // 'replace' = kartu lama hilang | 'overwrite' = kartu lama tidak hilang
+
+      function handleExportJSON() {
+        if (state.quizzes.length === 0) {
+          showToast("Tidak ada data paket soal untuk diekspor.", "error");
+          return;
+        }
+        const dataStr = JSON.stringify(state.quizzes, null, 2);
+        const blob = new Blob([dataStr], { type: "application/json" });
+        const url = URL.createObjectURL(blob);
+
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `sts-portal-backup-${getTodayISO()}.json`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        showToast("Data JSON berhasil diunduh!", "success");
+      }
+
+      function triggerImportJSON(mode = "replace") {
+        currentImportMode = mode;
+        const fileInput = document.getElementById("import-json-input");
+        fileInput.value = "";
+        fileInput.click();
+      }
+
+      document
+        .getElementById("import-json-input")
+        .addEventListener("change", (event) => {
+          const file = event.target.files?.[0];
+          if (!file) return;
+
+          const reader = new FileReader();
+          reader.onload = (e) => {
+            try {
+              const parsed = JSON.parse(e.target.result);
+              const importedList = Array.isArray(parsed) ? parsed : [parsed];
+
+              // Validasi struktur dasar JSON
+              const validQuizzes = [];
+              for (const item of importedList) {
+                if (
+                  item &&
+                  typeof item.title === "string" &&
+                  item.title.trim() !== "" &&
+                  Array.isArray(item.questions) &&
+                  item.questions.length >= 1 &&
+                  item.questions.length <= 50
+                ) {
+                  const sanitizedQuestions = item.questions.map((q, idx) => ({
+                    id: q.id || `q${idx + 1}`,
+                    questionText: String(q.questionText || "").trim(),
+                    options: OPTION_IDS.map((optId, optIdx) => {
+                      const found = Array.isArray(q.options)
+                        ? q.options.find((o) => o.id === optId) ||
+                          q.options[optIdx]
+                        : null;
+                      return {
+                        id: optId,
+                        text:
+                          found && found.text ? String(found.text).trim() : "",
+                      };
+                    }),
+                    correctOptionId: OPTION_IDS.includes(q.correctOptionId)
+                      ? q.correctOptionId
+                      : "opt_a",
+                  }));
+
+                  validQuizzes.push({
+                    id:
+                      item.id ||
+                      `quiz_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
+                    title: item.title.trim(),
+                    accentColor: ACCENT_PALETTE.includes(item.accentColor)
+                      ? item.accentColor
+                      : pickRandomAccentColor(),
+                    createdAt: item.createdAt || getTodayISO(),
+                    questions: sanitizedQuestions,
+                  });
+                }
+              }
+
+              if (validQuizzes.length === 0) {
+                showToast(
+                  "Format file JSON tidak sesuai dengan skema STS Portal.",
+                  "error",
+                );
+                return;
+              }
+
+              if (currentImportMode === "overwrite") {
+                // Mode Overwrite JSON: Kartu sebelumnya TIDAK hilang
+                validQuizzes.forEach((imp) => {
+                  const existingIdx = state.quizzes.findIndex(
+                    (q) =>
+                      q.id === imp.id &&
+                      q.title.trim().toLowerCase() ===
+                        imp.title.trim().toLowerCase(),
+                  );
+                  if (existingIdx > -1) {
+                    state.quizzes[existingIdx] = imp;
+                  } else {
+                    const idExists = state.quizzes.some((q) => q.id === imp.id);
+                    if (idExists) {
+                      imp.id = `quiz_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`;
+                    }
+                    state.quizzes.unshift(imp);
+                  }
+                });
+
+                saveQuizzesToStorage();
+                renderApp();
+                showToast(
+                  `Overwrite JSON berhasil! ${validQuizzes.length} paket soal ditambahkan (kartu sebelumnya tetap ada).`,
+                  "success",
+                );
+              } else {
+                // Mode Impor JSON: Kartu sebelumnya HILANG semua tanpa sisa
+                state.quizzes = validQuizzes;
+                state.currentQuiz = null;
+                state.evaluationResult = null;
+                state.userAnswers = {};
+                state.flaggedQuestions = {};
+
+                saveQuizzesToStorage();
+                renderApp();
+                showToast(
+                  `Impor JSON berhasil! Menampilkan ${validQuizzes.length} paket soal baru (kartu sebelumnya dihapus).`,
+                  "success",
+                );
+              }
+            } catch (err) {
+              console.error(err);
+              showToast("File JSON rusak atau tidak valid.", "error");
+            }
+          };
+          reader.readAsText(file);
+        });
+
+      /*************************************************************************
+       * 7. VIEW B: HALAMAN EDITOR / BUILDER SOAL (CREATOR VIEW)
+       *************************************************************************/
+      function createBlankQuestion(indexNumber) {
+        return {
+          id: `q_${Date.now()}_${indexNumber}_${Math.random().toString(36).slice(2, 5)}`,
+          questionText: "",
+          options: [
+            { id: "opt_a", text: "" },
+            { id: "opt_b", text: "" },
+            { id: "opt_c", text: "" },
+            { id: "opt_d", text: "" },
+            { id: "opt_e", text: "" },
+          ],
+          correctOptionId: "", // Harus dipilih oleh pembuat soal
+        };
+      }
+
+      function openEditorForCreate() {
+        state.currentQuiz = null;
+        state.editorDraft = {
+          id: `quiz_${Date.now()}`,
+          title: "",
+          accentColor: pickRandomAccentColor(),
+          createdAt: getTodayISO(),
+          questions: [createBlankQuestion(1)],
+          validationErrors: [],
+        };
+        state.view = "EDITOR";
+        renderApp();
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      }
+
+      function openEditorForEdit(quizId) {
+        const found = state.quizzes.find((q) => q.id === quizId);
+        if (!found) return;
+
+        state.currentQuiz = found;
+        state.editorDraft = {
+          id: found.id,
+          title: found.title,
+          accentColor: found.accentColor || pickRandomAccentColor(),
+          createdAt: found.createdAt || getTodayISO(),
+          questions: structuredClone(found.questions),
+          validationErrors: [],
+        };
+        state.view = "EDITOR";
+        renderApp();
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      }
+
+      function syncEditorInputsFromDOM() {
+        const titleInput = document.getElementById("editor-quiz-title");
+        if (titleInput) {
+          state.editorDraft.title = titleInput.value;
+        }
+
+        state.editorDraft.questions.forEach((q, qIdx) => {
+          const qTextEl = document.getElementById(`editor-qtext-${qIdx}`);
+          if (qTextEl) {
+            q.questionText = qTextEl.value;
+          }
+          q.options.forEach((opt, optIdx) => {
+            const optInputEl = document.getElementById(
+              `editor-opt-${qIdx}-${optIdx}`,
+            );
+            if (optInputEl) {
+              opt.text = optInputEl.value;
+            }
+          });
+        });
+      }
+
+      function syncSingleQuestionFromDOM(qIdx) {
+        const q = state.editorDraft.questions[qIdx];
+        if (!q) return;
+        const qTextEl = document.getElementById(`editor-qtext-${qIdx}`);
+        if (qTextEl) q.questionText = qTextEl.value;
+        q.options.forEach((opt, optIdx) => {
+          const optInputEl = document.getElementById(
+            `editor-opt-${qIdx}-${optIdx}`,
+          );
+          if (optInputEl) opt.text = optInputEl.value;
+        });
+      }
+
+      function buildPaletteButtonsHtml(accentColor) {
+        return ACCENT_PALETTE.map((color) => {
+          const isSelected = color === accentColor;
+          return `
+          <button type="button" onclick="selectEditorAccent('${color}')"
+            class="w-7 h-7 rounded-full ${isSelected ? "ring-2 ring-offset-2 ring-slate-800 scale-110" : "opacity-75 hover:opacity-100"}"
+            style="background-color: ${color};"
+            title="Pilih Warna Aksen ${color}">
+          </button>
+        `;
+        }).join("");
+      }
+
+      function buildEditorQuestionCardHtml(q, qIdx, canDeleteQuestion) {
+        const optionsRowsHtml = q.options
+          .map((opt, optIdx) => {
+            const letter = OPTION_LETTERS[optIdx];
+            const isKey = q.correctOptionId === opt.id;
+
+            return `
+            <div class="flex items-center gap-2.5 sm:gap-3 p-2 rounded-xl border ${
+              isKey
+                ? "bg-[#ECFDF5]/70 border-emerald-300"
+                : "bg-slate-50/60 border-[#E2E8F0] focus-within:border-blue-400 focus-within:bg-white"
+            }">
+              <!-- Badge Huruf Opsi -->
+              <span class="w-7 h-7 rounded-lg flex items-center justify-center text-xs font-bold shrink-0 ${
+                isKey
+                  ? "bg-[#10B981] text-white"
+                  : "bg-white text-slate-700 border border-slate-200"
+              }">
+                ${letter}
+              </span>
+
+              <!-- Input Teks Opsi -->
+              <input
+                type="text"
+                id="editor-opt-${qIdx}-${optIdx}"
+                value="${escapeHtml(opt.text)}"
+                placeholder="Ketik teks pilihan jawaban ${letter}..."
+                class="flex-1 bg-transparent text-xs sm:text-sm text-slate-800 placeholder-slate-400 focus:outline-none"
+              />
+
+              <!-- Radio Button Kunci Jawaban (Simbol saja di HP) -->
+              <label
+                title="${isKey ? "Kunci Jawaban Benar" : "Jadikan Kunci Jawaban"}"
+                class="btn-interactive inline-flex items-center justify-center gap-1.5 cursor-pointer select-none px-2.5 py-1.5 sm:py-1 rounded-lg text-xs font-semibold shrink-0 ${
+                  isKey
+                    ? "bg-[#10B981] text-white shadow-2xs"
+                    : "bg-white text-slate-600 hover:bg-slate-100 border border-slate-200"
+                }">
+                <input
+                  type="radio"
+                  name="correct-option-${qIdx}"
+                  ${isKey ? "checked" : ""}
+                  onchange="handleSelectCorrectOption(${qIdx}, '${opt.id}')"
+                  class="sr-only"
+                />
+                <span class="sm:hidden font-extrabold">✓</span>
+                <span class="hidden sm:inline">${isKey ? "✓ Kunci Benar" : "Jadikan Kunci"}</span>
+              </label>
+            </div>
+          `;
+          })
+          .join("");
+
+        return `
+          <div id="editor-question-card-${qIdx}" class="perf-card bg-white rounded-2xl border border-[#E2E8F0] shadow-sm p-5 sm:p-6">
+            <div class="flex items-center justify-between gap-3 pb-4 mb-4 border-b border-slate-100">
+              <div class="flex items-center gap-2.5">
+                <span class="px-3 py-1 rounded-lg bg-[#2563EB] text-white text-xs font-bold">
+                  Soal No. ${qIdx + 1}
+                </span>
+                ${
+                  OPTION_IDS.includes(q.correctOptionId)
+                    ? `<span class="inline-flex items-center gap-1 text-xs font-semibold text-emerald-700 bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-200">
+                        ✓ Kunci: Opsi ${q.correctOptionId.replace("opt_", "").toUpperCase()}
+                       </span>`
+                    : `<span class="inline-flex items-center gap-1 text-xs font-semibold text-amber-700 bg-amber-50 px-2.5 py-0.5 rounded-full border border-amber-200">
+                        ! Kunci belum dipilih
+                       </span>`
+                }
+              </div>
+
+              <button
+                type="button"
+                onclick="handleRemoveQuestion(${qIdx})"
+                ${!canDeleteQuestion ? "disabled" : ""}
+                aria-label="Hapus Soal"
+                class="inline-flex items-center justify-center gap-1 p-2 sm:px-2.5 sm:py-1.5 rounded-lg text-xs font-semibold border ${
+                  canDeleteQuestion
+                    ? "text-red-600 border-red-200 hover:bg-red-50"
+                    : "text-slate-300 border-slate-100 cursor-not-allowed"
+                }"
+                title="${canDeleteQuestion ? "Hapus Soal Ini" : "Minimal harus ada 1 soal"}">
+                <svg class="w-4 h-4 sm:w-3.5 sm:h-3.5 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                <span class="hidden sm:inline">Hapus Soal</span>
+              </button>
+            </div>
+
+            <!-- Input Teks Pertanyaan -->
+            <div class="mb-4">
+              <label for="editor-qtext-${qIdx}" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                Teks Pertanyaan <span class="text-red-500">*</span>
+              </label>
+              <textarea
+                id="editor-qtext-${qIdx}"
+                rows="3"
+                placeholder="Tulis narasi atau soal pertanyaan nomor ${qIdx + 1} di sini..."
+                class="w-full rounded-xl border border-[#E2E8F0] bg-slate-50/50 focus:bg-white p-3.5 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:border-[#2563EB] focus:ring-2 focus:ring-blue-500/15"
+              >${escapeHtml(q.questionText)}</textarea>
+            </div>
+
+            <!-- 5 Baris Opsi Jawaban A-E -->
+            <div>
+              <div class="flex items-center justify-between mb-2">
+                <span class="text-xs font-bold text-slate-700 uppercase tracking-wider">
+                  Kunci Jawaban <span class="text-red-500">*</span>
+                </span>
+              </div>
+              <div class="space-y-2.5">
+                ${optionsRowsHtml}
+              </div>
+            </div>
+          </div>
+        `;
+      }
+
+      function selectEditorAccent(color) {
+        state.editorDraft.accentColor = color;
+        const barEl = document.getElementById("editor-accent-bar");
+        const paletteEl = document.getElementById("editor-palette-container");
+        if (barEl) barEl.style.backgroundColor = color;
+        if (paletteEl) paletteEl.innerHTML = buildPaletteButtonsHtml(color);
+      }
+
+      function handleSelectCorrectOption(qIdx, optId) {
+        syncSingleQuestionFromDOM(qIdx);
+        state.editorDraft.questions[qIdx].correctOptionId = optId;
+        const cardEl = document.getElementById(`editor-question-card-${qIdx}`);
+        if (cardEl) {
+          const canDeleteQuestion = state.editorDraft.questions.length > 1;
+          cardEl.outerHTML = buildEditorQuestionCardHtml(
+            state.editorDraft.questions[qIdx],
+            qIdx,
+            canDeleteQuestion,
+          );
+        } else {
+          renderEditor();
+        }
+      }
+
+      function handleAddQuestion() {
+        if (state.editorDraft.questions.length >= 50) {
+          showToast(
+            "Batas maksimal 50 soal per paket telah tercapai.",
+            "error",
+          );
+          return;
+        }
+        const prevLen = state.editorDraft.questions.length;
+        const nextNum = prevLen + 1;
+        const newQ = createBlankQuestion(nextNum);
+        state.editorDraft.questions.push(newQ);
+
+        const listEl = document.getElementById("editor-questions-list");
+        if (listEl) {
+          if (prevLen === 1) {
+            syncSingleQuestionFromDOM(0);
+            const firstCardEl = document.getElementById(
+              "editor-question-card-0",
+            );
+            if (firstCardEl) {
+              firstCardEl.outerHTML = buildEditorQuestionCardHtml(
+                state.editorDraft.questions[0],
+                0,
+                true,
+              );
+            }
+          }
+          listEl.insertAdjacentHTML(
+            "beforeend",
+            buildEditorQuestionCardHtml(newQ, nextNum - 1, true),
+          );
+          renderHeader();
+        } else {
+          syncEditorInputsFromDOM();
+          renderEditor();
+        }
+
+        requestAnimationFrame(() => {
+          const newCard = document.getElementById(
+            `editor-question-card-${nextNum - 1}`,
+          );
+          if (newCard) {
+            newCard.scrollIntoView({ behavior: "smooth", block: "center" });
+          }
+        });
+      }
+
+      function handleRemoveQuestion(qIdx) {
+        syncEditorInputsFromDOM();
+        if (state.editorDraft.questions.length <= 1) {
+          showToast("Minimal harus terdapat 1 soal dalam paket.", "error");
+          return;
+        }
+        state.editorDraft.questions.splice(qIdx, 1);
+        renderEditor();
+        showToast(`Soal #${qIdx + 1} dihapus.`, "info");
+      }
+
+      function validateEditorDraft() {
+        syncEditorInputsFromDOM();
+        const errors = [];
+        let firstInvalidQuestionIndex = null;
+
+        if (!state.editorDraft.title || state.editorDraft.title.trim() === "") {
+          errors.push("Judul Paket Soal wajib diisi dan tidak boleh kosong.");
+        }
+
+        const qCount = state.editorDraft.questions.length;
+        if (qCount < 1 || qCount > 50) {
+          errors.push("Jumlah soal harus berada di rentang 1 hingga 50 soal.");
+        }
+
+        state.editorDraft.questions.forEach((q, idx) => {
+          const qNum = idx + 1;
+          const missingParts = [];
+
+          if (!q.questionText || q.questionText.trim() === "") {
+            missingParts.push("teks pertanyaan kosong");
+          }
+
+          const emptyOptionLetters = [];
+          q.options.forEach((opt, optIdx) => {
+            if (!opt.text || opt.text.trim() === "") {
+              emptyOptionLetters.push(OPTION_LETTERS[optIdx]);
+            }
+          });
+          if (emptyOptionLetters.length > 0) {
+            missingParts.push(`opsi ${emptyOptionLetters.join(", ")} kosong`);
+          }
+
+          if (!OPTION_IDS.includes(q.correctOptionId)) {
+            missingParts.push("kunci jawaban belum dipilih");
+          }
+
+          if (missingParts.length > 0) {
+            if (firstInvalidQuestionIndex === null) {
+              firstInvalidQuestionIndex = idx;
+            }
+            errors.push(`Soal No. ${qNum}: ${missingParts.join(", ")}.`);
+          }
+        });
+
+        state.editorDraft.validationErrors = errors;
+        return {
+          isValid: errors.length === 0,
+          errors,
+          firstInvalidQuestionIndex,
+        };
+      }
+
+      function handleSaveQuiz() {
+        const validation = validateEditorDraft();
+        if (!validation.isValid) {
+          renderEditor();
+          showToast(
+            `Terdapat ${validation.errors.length} bagian yang belum lengkap. Periksa peringatan di atas.`,
+            "error",
+          );
+
+          if (validation.firstInvalidQuestionIndex !== null) {
+            setTimeout(() => {
+              const targetEl = document.getElementById(
+                `editor-question-card-${validation.firstInvalidQuestionIndex}`,
+              );
+              if (targetEl) {
+                targetEl.scrollIntoView({
+                  behavior: "smooth",
+                  block: "center",
+                });
+                targetEl.classList.add("animate-shake");
+              }
+            }, 60);
+          } else {
+            window.scrollTo({ top: 0, behavior: "smooth" });
+          }
+          return;
+        }
+
+        // Normalisasi ID soal berurutan q1, q2, ...
+        const finalQuiz = {
+          id: state.editorDraft.id,
+          title: state.editorDraft.title.trim(),
+          accentColor: state.editorDraft.accentColor,
+          createdAt: state.editorDraft.createdAt || getTodayISO(),
+          questions: state.editorDraft.questions.map((q, idx) => ({
+            id: `q${idx + 1}`,
+            questionText: q.questionText.trim(),
+            options: q.options.map((opt, oIdx) => ({
+              id: OPTION_IDS[oIdx],
+              text: opt.text.trim(),
+            })),
+            correctOptionId: q.correctOptionId,
+          })),
+        };
+
+        const existingIndex = state.quizzes.findIndex(
+          (item) => item.id === finalQuiz.id,
+        );
+        if (existingIndex > -1) {
+          state.quizzes[existingIndex] = finalQuiz;
+        } else {
+          state.quizzes.unshift(finalQuiz);
+        }
+
+        saveQuizzesToStorage();
+        showToast("Paket soal berhasil disimpan!", "success");
+        navigateToHome();
+      }
+
+      function confirmCancelEditor() {
+        navigateToHome();
+      }
+
+      function renderEditor() {
+        const mainEl = document.getElementById("app-main");
+        const { title, accentColor, questions, validationErrors } =
+          state.editorDraft;
+        const canDeleteQuestion = questions.length > 1;
+
+        const validationBannerHtml =
+          validationErrors.length > 0
+            ? `
+        <div id="editor-validation-banner" class="mb-6 rounded-2xl bg-[#FEF2F2] border border-red-200 p-4 sm:p-5 text-red-800 shadow-xs">
+          <div class="flex items-start gap-3">
+            <div class="w-6 h-6 rounded-lg bg-red-100 text-[#EF4444] flex items-center justify-center shrink-0 mt-0.5 font-bold text-sm">!</div>
+            <div class="flex-1">
+              <h3 class="text-xs sm:text-sm font-bold text-red-900">Mohon Lengkapi Data Berikut Sebelum Menyimpan:</h3>
+              <ul class="mt-2 space-y-1 text-xs text-red-700 list-disc list-inside">
+                ${validationErrors.map((err) => `<li>${escapeHtml(err)}</li>`).join("")}
+              </ul>
+            </div>
+          </div>
+        </div>
+      `
+            : "";
+
+        const questionsListHtml = questions
+          .map((q, qIdx) =>
+            buildEditorQuestionCardHtml(q, qIdx, canDeleteQuestion),
+          )
+          .join("");
+
+        mainEl.innerHTML = `
+        <section class="max-w-4xl mx-auto animate-view">
+          ${validationBannerHtml}
+
+          <!-- Kartu Metadata Paket Soal -->
+          <div class="bg-white rounded-2xl border border-[#E2E8F0] shadow-sm overflow-hidden mb-6">
+            <div id="editor-accent-bar" class="h-1.5 w-full" style="background-color: ${escapeHtml(accentColor)};"></div>
+            <div class="p-5 sm:p-6">
+              <div class="grid grid-cols-1 md:grid-cols-3 gap-5 items-center">
+                <div class="md:col-span-2">
+                  <label for="editor-quiz-title" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                    Judul Soal <span class="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    id="editor-quiz-title"
+                    value="${escapeHtml(title)}"
+                    placeholder="Contoh: Agama Hindu"
+                    class="w-full rounded-xl border border-[#E2E8F0] bg-slate-50/50 focus:bg-white px-4 py-2.5 text-sm sm:text-base font-semibold text-slate-900 placeholder-slate-400 focus:outline-none focus:border-[#2563EB] focus:ring-2 focus:ring-blue-500/15"
+                  />
+                </div>
+                <div>
+                  <span class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
+                    Warna Garis Aksen Kartu
+                  </span>
+                  <div id="editor-palette-container" class="flex items-center gap-2.5">
+                    ${buildPaletteButtonsHtml(accentColor)}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Daftar Dinamis Soal -->
+          <div id="editor-questions-list" class="space-y-5">
+            ${questionsListHtml}
+          </div>
+        </section>
+      `;
+        renderHeader();
+      }
+
+      /*************************************************************************
+       * 8. VIEW C: HALAMAN SOAL (EXAM VIEW) & RANDOMIZATION ENGINE
+       *************************************************************************/
+      const EXAM_DURATION_SECONDS = 45 * 60; // 45 menit (2700 detik)
+
+      function formatTimerMMSS(totalSeconds) {
+        const safeSec = Math.max(0, Math.floor(totalSeconds));
+        const mins = String(Math.floor(safeSec / 60)).padStart(2, "0");
+        const secs = String(safeSec % 60).padStart(2, "0");
+        return `${mins}:${secs}`;
+      }
+
+      function stopExamTimer() {
+        if (state.timerIntervalId) {
+          clearInterval(state.timerIntervalId);
+          state.timerIntervalId = null;
+        }
+      }
+
+      function updateTimerDOMOnly() {
+        const displayEl = document.getElementById("exam-timer-display");
+        if (displayEl) {
+          displayEl.textContent = formatTimerMMSS(state.remainingSeconds);
+        }
+        // Hanya ubah className tepat saat menyentuh batas 5 menit (300 detik) agar tidak memicu style recalculation tiap detik
+        if (state.remainingSeconds === 300) {
+          const boxEl = document.getElementById("exam-timer-box");
+          if (boxEl) {
+            boxEl.className =
+              "mb-4 p-3.5 rounded-xl border bg-red-50 border-red-200 text-red-700 flex items-center justify-between transition-colors";
+          }
+        }
+      }
+
+      function startExamTimer() {
+        stopExamTimer();
+        state.remainingSeconds = EXAM_DURATION_SECONDS;
+        state.timerIntervalId = setInterval(() => {
+          if (state.view !== "EXAM") {
+            stopExamTimer();
+            return;
+          }
+          state.remainingSeconds -= 1;
+          updateTimerDOMOnly();
+
+          if (state.remainingSeconds <= 0) {
+            stopExamTimer();
+            showToast(
+              "Waktu 45 menit habis! Jawaban otomatis dikirim.",
+              "error",
+            );
+            submitExamNow();
+          }
+        }, 1000);
+      }
+
+      /**
+       * Memulai sesi ujian penuh atau sesi Drill Mode (hanya soal salah/kosong)
+       */
+      function startExam(
+        quizId,
+        customQuestionsSubset = null,
+        isDrillMode = false,
+      ) {
+        const quiz = state.quizzes.find((q) => q.id === quizId);
+        if (!quiz) {
+          showToast("Paket soal tidak ditemukan.", "error");
+          return;
+        }
+
+        state.currentQuiz = quiz;
+        const sourceQuestions =
+          Array.isArray(customQuestionsSubset) &&
+          customQuestionsSubset.length > 0
+            ? customQuestionsSubset
+            : quiz.questions;
+
+        // 1. Acak urutan nomor soal menggunakan Fisher-Yates shuffle
+        const shuffledQuestions = fisherYatesShuffle(sourceQuestions).map(
+          (q) => {
+            // 2. Acak urutan pilihan ganda (A-E) pada masing-masing soal
+            // Penilaian tetap akurat karena dicocokkan berdasarkan option.id unik ('opt_a' dst.)
+            const shuffledOptions = fisherYatesShuffle(q.options);
+            return {
+              id: q.id,
+              questionText: q.questionText,
+              options: shuffledOptions,
+              correctOptionId: q.correctOptionId,
+            };
+          },
+        );
+
+        state.examSession = {
+          quizId: quiz.id,
+          quizTitle: quiz.title,
+          isDrillMode: Boolean(isDrillMode),
+          questions: shuffledQuestions,
+        };
+
+        state.activeQuestionIndex = 0;
+        state.userAnswers = {};
+        state.evaluationResult = null;
+        state.view = "EXAM";
+
+        startExamTimer();
+        renderApp();
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      }
+
+      function buildExamLeftCardContentHtml() {
+        const questions = state.examSession.questions;
+        const total = questions.length;
+        const currentIdx = state.activeQuestionIndex;
+        const activeQuestion = questions[currentIdx];
+        if (!activeQuestion) return "";
+
+        const selectedOptId = state.userAnswers[activeQuestion.id] || null;
+
+        const optionsHtml = activeQuestion.options
+          .map((opt, optIdx) => {
+            const displayLetter = OPTION_LETTERS[optIdx];
+            const isSelected = selectedOptId === opt.id;
+
+            return `
+          <button
+            type="button"
+            id="exam-opt-btn-${optIdx}"
+            onclick="selectExamOption('${activeQuestion.id}', '${opt.id}')"
+            class="w-full text-left group flex items-start gap-3.5 p-3.5 sm:p-4 rounded-xl border ${
+              isSelected
+                ? "border-blue-600 bg-blue-50/60 shadow-2xs ring-1 ring-blue-600/20"
+                : "border-[#E2E8F0] bg-white hover:border-blue-300 hover:bg-slate-50/80"
+            }">
+            <span id="exam-opt-badge-${optIdx}" class="w-8 h-8 rounded-lg flex items-center justify-center text-xs font-extrabold shrink-0 ${
+              isSelected
+                ? "bg-[#2563EB] text-white shadow-2xs"
+                : "bg-slate-100 text-slate-700 group-hover:bg-blue-100 group-hover:text-[#2563EB]"
+            }">
+              ${displayLetter}
+            </span>
+            <span id="exam-opt-text-${optIdx}" class="flex-1 text-sm sm:text-base leading-relaxed pt-0.5 ${
+              isSelected
+                ? "font-semibold text-slate-900"
+                : "font-medium text-slate-700"
+            }">
+              ${escapeHtml(opt.text)}
+            </span>
+          </button>
+        `;
+          })
+          .join("");
+
+        return `
+          <!-- Body Teks Pertanyaan & Pilihan Ganda + Tombol Navigasi Menyatu (Padding Atas = Bawah) -->
+          <div class="p-4 sm:p-5">
+            <div class="text-base sm:text-lg font-semibold text-slate-900 leading-relaxed mb-5 whitespace-pre-line">
+              ${escapeHtml(activeQuestion.questionText)}
+            </div>
+
+            <div class="space-y-2.5">
+              ${optionsHtml}
+            </div>
+
+            <!-- Tombol Kembali & Selanjutnya Menyatu di Dalam Card Soal -->
+            <div class="mt-5 pt-4 border-t border-slate-100 grid grid-cols-2 gap-3">
+              <button
+                type="button"
+                onclick="goToQuestionIndex(${currentIdx - 1})"
+                ${currentIdx === 0 ? "disabled" : ""}
+                class="px-4 py-2.5 rounded-xl text-xs sm:text-sm font-semibold bg-transparent border ${
+                  currentIdx === 0
+                    ? "text-slate-300 border-slate-200 cursor-not-allowed"
+                    : "text-slate-700 border-[#E2E8F0] hover:border-slate-400 hover:text-slate-900"
+                }">
+                ← Kembali
+              </button>
+              <button
+                type="button"
+                onclick="goToQuestionIndex(${currentIdx + 1})"
+                ${currentIdx === total - 1 ? "disabled" : ""}
+                class="px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold border ${
+                  currentIdx === total - 1
+                    ? "bg-blue-300 text-white border-blue-300 cursor-not-allowed"
+                    : "bg-[#2563EB] text-white border-[#2563EB] hover:bg-[#1D4ED8] shadow-xs"
+                }">
+                Selanjutnya →
+              </button>
+            </div>
+          </div>
+        `;
+      }
+
+      function getNavGridBtnClass(idx) {
+        const q = state.examSession.questions[idx];
+        const isCurrent = idx === state.activeQuestionIndex;
+        const isAnswered = q && Boolean(state.userAnswers[q.id]);
+        let btnStyle =
+          "relative h-10 rounded-xl border text-xs font-bold flex items-center justify-center ";
+        btnStyle += isAnswered
+          ? "bg-[#2563EB] text-white border-[#2563EB] hover:bg-[#1D4ED8]"
+          : "bg-slate-100 text-slate-600 border-slate-200 hover:bg-slate-200/70";
+        if (isCurrent) {
+          btnStyle += " ring-2 ring-[#2563EB] ring-offset-2 font-extrabold";
+        }
+        return btnStyle;
+      }
+
+      function buildExamNavGridHtml() {
+        const questions = state.examSession.questions;
+        return questions
+          .map(
+            (q, idx) => `
+          <button
+            type="button"
+            id="exam-nav-btn-${idx}"
+            onclick="goToQuestionIndex(${idx})"
+            class="${getNavGridBtnClass(idx)}"
+            title="Soal Nomor ${idx + 1}">
+            <span>${idx + 1}</span>
+          </button>
+        `,
+          )
+          .join("");
+      }
+
+      function selectExamOption(questionId, optionId) {
+        state.userAnswers[questionId] = optionId;
+        const currentIdx = state.activeQuestionIndex;
+        const activeQuestion = state.examSession.questions[currentIdx];
+        if (!activeQuestion) return;
+
+        // O(1) in-place class update untuk 5 tombol opsi (0 innerHTML parsing)
+        activeQuestion.options.forEach((opt, optIdx) => {
+          const isSelected = opt.id === optionId;
+          const btnEl = document.getElementById(`exam-opt-btn-${optIdx}`);
+          const badgeEl = document.getElementById(`exam-opt-badge-${optIdx}`);
+          const textEl = document.getElementById(`exam-opt-text-${optIdx}`);
+          if (btnEl && badgeEl && textEl) {
+            btnEl.className = `w-full text-left group flex items-start gap-3.5 p-3.5 sm:p-4 rounded-xl border ${
+              isSelected
+                ? "border-blue-600 bg-blue-50/60 shadow-2xs ring-1 ring-blue-600/20"
+                : "border-[#E2E8F0] bg-white hover:border-blue-300 hover:bg-slate-50/80"
+            }`;
+            badgeEl.className = `w-8 h-8 rounded-lg flex items-center justify-center text-xs font-extrabold shrink-0 ${
+              isSelected
+                ? "bg-[#2563EB] text-white shadow-2xs"
+                : "bg-slate-100 text-slate-700 group-hover:bg-blue-100 group-hover:text-[#2563EB]"
+            }`;
+            textEl.className = `flex-1 text-sm sm:text-base leading-relaxed pt-0.5 ${
+              isSelected
+                ? "font-semibold text-slate-900"
+                : "font-medium text-slate-700"
+            }`;
+          }
+        });
+
+        // O(1) update hanya pada 1 tombol nomor soal aktif di panel kanan
+        const navBtnEl = document.getElementById(`exam-nav-btn-${currentIdx}`);
+        if (navBtnEl) {
+          navBtnEl.className = getNavGridBtnClass(currentIdx);
+        }
+      }
+
+      function goToQuestionIndex(index) {
+        const total = state.examSession.questions.length;
+        const prevIdx = state.activeQuestionIndex;
+        if (index < 0 || index >= total || index === prevIdx) return;
+
+        state.activeQuestionIndex = index;
+        const leftCardEl = document.getElementById("exam-left-card");
+        if (leftCardEl) {
+          leftCardEl.innerHTML = buildExamLeftCardContentHtml();
+          // Hanya update 2 tombol nomor soal (soal sebelumnya & soal baru) tanpa menyentuh 48 tombol lainnya
+          const prevNavBtn = document.getElementById(`exam-nav-btn-${prevIdx}`);
+          const nextNavBtn = document.getElementById(`exam-nav-btn-${index}`);
+          if (prevNavBtn) prevNavBtn.className = getNavGridBtnClass(prevIdx);
+          if (nextNavBtn) nextNavBtn.className = getNavGridBtnClass(index);
+        } else {
+          renderExam();
+        }
+      }
+
+      function openSubmitExamModal() {
+        const total = state.examSession.questions.length;
+        const answered = Object.keys(state.userAnswers).length;
+        const unanswered = total - answered;
+
+        const warningMessage =
+          unanswered > 0
+            ? `Kamu baru menjawab <strong>${answered}</strong> dari <strong>${total}</strong> soal. Masih ada <strong class="text-red-600">${unanswered} soal</strong> yang belum diisi (otomatis dihitung salah). Yakin ingin mengakhiri?`
+            : `Kamu telah menjawab seluruh <strong>${total} soal</strong> pada paket ujian ini. Yakin ingin mengakhiri dan melihat evaluasi nilai?`;
+
+        openModal(`
+        <div class="bg-white rounded-2xl border border-[#E2E8F0] shadow-xl max-w-md w-full p-6 animate-view">
+          <div class="w-12 h-12 rounded-2xl ${unanswered > 0 ? "bg-amber-50 border-amber-200 text-amber-600" : "bg-blue-50 border-blue-200 text-[#2563EB]"} border flex items-center justify-center mb-4">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+          </div>
+          <h3 class="text-base sm:text-lg font-bold text-slate-900">Konfirmasi Pengumpulan Jawaban</h3>
+          <p class="text-xs sm:text-sm text-slate-600 mt-2 leading-relaxed">
+            ${warningMessage}
+          </p>
+          <div class="mt-6 flex items-center justify-end gap-2.5">
+            <button onclick="closeModal()"
+              class="px-4 py-2.5 rounded-xl text-xs font-semibold text-slate-700 hover:bg-slate-100 border border-[#E2E8F0]">
+              Periksa Lagi
+            </button>
+            <button onclick="submitExamNow()"
+              class="px-5 py-2.5 rounded-xl text-xs font-bold text-white bg-[#2563EB] hover:bg-[#1D4ED8] shadow-xs">
+              Ya, Kumpulkan
+            </button>
+          </div>
+        </div>
+      `);
+      }
+
+      function openExitExamModal() {
+        openModal(`
+        <div class="bg-white rounded-2xl border border-[#E2E8F0] shadow-xl max-w-md w-full p-6 animate-view">
+          <h3 class="text-base font-bold text-slate-900">Keluar dari Sesi Ujian?</h3>
+          <p class="text-xs sm:text-sm text-slate-600 mt-1.5 leading-relaxed">
+            Progres jawaban pada sesi ini akan direset jika Anda keluar ke Beranda sebelum menekan tombol Kumpulkan.
+          </p>
+          <div class="mt-6 flex items-center justify-end gap-2.5">
+            <button onclick="closeModal()" class="px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-100 border border-[#E2E8F0]">
+              Lanjutkan Ujian
+            </button>
+            <button onclick="closeModal(); navigateToHome();" class="px-4 py-2 rounded-xl text-xs font-semibold text-white bg-red-600 hover:bg-red-700">
+              Ya, Keluar ke Beranda
+            </button>
+          </div>
+        </div>
+      `);
+      }
+
+      function submitExamNow() {
+        stopExamTimer();
+        closeModal();
+        state.evaluationResult = calculateScore(
+          state.examSession.questions,
+          state.userAnswers,
+        );
+        state.view = "EVALUATION";
+        renderApp();
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      }
+
+      function renderExam() {
+        const mainEl = document.getElementById("app-main");
+        const activeQuestion =
+          state.examSession.questions[state.activeQuestionIndex];
+        if (!activeQuestion) return;
+
+        const isLowTime = state.remainingSeconds <= 300;
+
+        mainEl.innerHTML = `
+        <section class="animate-view">
+          <div class="flex flex-col lg:flex-row items-start gap-5">
+
+            <!-- KOLOM KIRI: KARTU SOAL UTAMA MENYATU DENGAN TOMBOL KEMBALI & SELANJUTNYA (70% Desktop) -->
+            <div id="exam-left-card" class="w-full lg:w-[70%] bg-white rounded-2xl border border-[#E2E8F0] shadow-sm overflow-hidden">
+              ${buildExamLeftCardContentHtml()}
+            </div>
+
+            <!-- KOLOM KANAN: KARTU NAVIGASI SOAL (30% Desktop) -->
+            <aside class="w-full lg:w-[30%] bg-white rounded-2xl border border-[#E2E8F0] shadow-sm p-4 sm:p-5 sticky top-4">
+              <!-- Timer Countdown 45 Menit -->
+              <div id="exam-timer-box" class="${
+                isLowTime
+                  ? "mb-4 p-3.5 rounded-xl border bg-red-50 border-red-200 text-red-700 flex items-center justify-between transition-colors"
+                  : "mb-4 p-3.5 rounded-xl border bg-slate-50 border-slate-200/80 text-slate-800 flex items-center justify-between transition-colors"
+              }">
+                <div class="flex items-center gap-2">
+                  <svg class="w-4 h-4 text-[#2563EB] shrink-0" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                  </svg>
+                  <span class="text-xs font-bold uppercase tracking-wider text-slate-600">Sisa Waktu</span>
+                </div>
+                <span id="exam-timer-display" class="text-base sm:text-lg font-extrabold tabular-nums tracking-tight">
+                  ${formatTimerMMSS(state.remainingSeconds)}
+                </span>
+              </div>
+
+              <!-- Legenda Status -->
+              <div class="flex flex-wrap items-center gap-3 text-[11px] text-slate-500 pb-3.5 mb-3.5 border-b border-slate-100">
+                <span class="inline-flex items-center gap-1.5">
+                  <span class="w-3 h-3 rounded bg-[#2563EB] inline-block"></span> Sudah Dijawab
+                </span>
+                <span class="inline-flex items-center gap-1.5">
+                  <span class="w-3 h-3 rounded bg-slate-100 border border-slate-300 inline-block"></span> Belum
+                </span>
+                <span class="inline-flex items-center gap-1.5">
+                  <span class="w-3 h-3 rounded border-2 border-[#2563EB] inline-block"></span> Aktif
+                </span>
+              </div>
+
+              <!-- Grid Nomor Soal -->
+              <div id="exam-nav-grid" class="grid grid-cols-5 gap-2 max-h-64 overflow-y-auto p-1">
+                ${buildExamNavGridHtml()}
+              </div>
+
+              <!-- Kontrol Navigasi Bawah -->
+              <div class="mt-5 pt-4 border-t border-slate-100 grid grid-cols-2 gap-2.5">
+                <button
+                  type="button"
+                  onclick="openExitExamModal()"
+                  class="py-2.5 px-3 rounded-xl text-xs font-semibold text-slate-600 hover:text-red-600 hover:bg-red-50 border border-[#E2E8F0] transition flex items-center justify-center text-center">
+                  Keluar Ujian
+                </button>
+
+                <button
+                  type="button"
+                  onclick="openSubmitExamModal()"
+                  class="py-2.5 px-3 rounded-xl text-xs font-bold text-white bg-[#2563EB] hover:bg-[#1D4ED8] shadow-sm transition flex items-center justify-center gap-1.5 text-center">
+                  <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                  </svg>
+                  <span>Kirim Jawaban</span>
+                </button>
+              </div>
+            </aside>
+
+          </div>
+        </section>
+      `;
+      }
+
+      /*************************************************************************
+       * 9. VIEW D: HALAMAN EVALUASI (EVALUATION VIEW) & DRILL MODE
+       *************************************************************************/
+      function handleRetryAllQuestions() {
+        if (!state.currentQuiz) return;
+        startExam(state.currentQuiz.id, null, false);
+        showToast("Ujian diulang kembali dengan pengacakan soal baru.", "info");
+      }
+
+      function handleRetryWrongOnly() {
+        if (!state.evaluationResult || !state.currentQuiz) return;
+
+        const wrongQuestionIds = state.evaluationResult.details
+          .filter((item) => !item.isCorrect)
+          .map((item) => item.questionId);
+
+        if (wrongQuestionIds.length === 0) {
+          showToast(
+            "Luar biasa! Tidak ada jawaban yang salah atau kosong.",
+            "success",
+          );
+          return;
+        }
+
+        // Ambil struktur soal asli dari paket untuk ID soal yang salah/kosong
+        const subsetQuestions = state.currentQuiz.questions.filter((q) =>
+          wrongQuestionIds.includes(q.id),
+        );
+        startExam(state.currentQuiz.id, subsetQuestions, true);
+        showToast(
+          `Drill Mode dimulai: Mengulang ${subsetQuestions.length} soal yang salah/kosong.`,
+          "info",
+        );
+      }
+
+      function renderEvaluation() {
+        const mainEl = document.getElementById("app-main");
+        const result = state.evaluationResult;
+        if (!result) return;
+
+        const hasWrongOrEmpty = result.wrongOrEmptyCount > 0;
+        const scoreColorClass =
+          result.finalScore >= 80
+            ? "text-[#10B981]"
+            : result.finalScore >= 60
+              ? "text-[#2563EB]"
+              : "text-[#EF4444]";
+
+        const reviewCardsHtml = result.details
+          .map((item) => {
+            const statusBadge = item.isCorrect
+              ? `<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-[#ECFDF5] text-[#10B981] border border-emerald-200">✓ Benar</span>`
+              : item.isUnanswered
+                ? `<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-[#FEF2F2] text-[#EF4444] border border-red-200">✕ Jawaban Salah (Tidak Dijawab)</span>`
+                : `<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-[#FEF2F2] text-[#EF4444] border border-red-200">✕ Jawaban Salah</span>`;
+
+            // Render evaluasi detail jawaban user & kunci jawaban
+            const userChoiceBox = item.isUnanswered
+              ? `
+            <div class="p-3.5 rounded-xl bg-red-50 text-red-700 border border-red-200 flex items-start gap-2.5">
+              <span class="font-extrabold text-sm leading-none mt-0.5">✕</span>
+              <div class="text-xs sm:text-sm">
+                <span class="font-bold block">Jawaban Kamu (Salah):</span>
+                <span class="italic font-semibold">Tidak Dijawab (Dikosongkan)</span>
+              </div>
+            </div>
+          `
+              : item.isCorrect
+                ? `
+            <div class="p-3.5 rounded-xl bg-emerald-50 text-emerald-700 border border-emerald-200 flex items-start gap-2.5">
+              <span class="font-extrabold text-sm leading-none mt-0.5">✓</span>
+              <div class="text-xs sm:text-sm">
+                <span class="font-bold block">Jawaban Kamu (Benar):</span>
+                <span>${escapeHtml(item.userOptionText)}</span>
+              </div>
+            </div>
+          `
+                : `
+            <div class="p-3.5 rounded-xl bg-red-50 text-red-700 border border-red-200 flex items-start gap-2.5">
+              <span class="font-extrabold text-sm leading-none mt-0.5">✕</span>
+              <div class="text-xs sm:text-sm">
+                <span class="font-bold block">Jawaban Kamu (Kurang Tepat):</span>
+                <span>${escapeHtml(item.userOptionText)}</span>
+              </div>
+            </div>
+          `;
+
+            const correctKeyBox = !item.isCorrect
+              ? `
+          <div class="p-3.5 rounded-xl bg-emerald-50 text-emerald-700 border border-emerald-200 flex items-start gap-2.5">
+            <span class="font-extrabold text-sm leading-none mt-0.5">✓</span>
+            <div class="text-xs sm:text-sm">
+              <span class="font-bold block">Kunci Jawaban yang Benar:</span>
+              <span>${escapeHtml(item.correctOptionText)}</span>
+            </div>
+          </div>
+        `
+              : "";
+
+            return `
+          <article class="perf-card bg-white rounded-2xl border border-[#E2E8F0] shadow-sm p-5 sm:p-6">
+            <div class="flex items-center justify-between gap-2 pb-3.5 mb-3.5 border-b border-slate-100">
+              <span class="text-xs font-extrabold uppercase tracking-wider text-slate-500">
+                Soal No. ${item.number}
+              </span>
+              ${statusBadge}
+            </div>
+
+            <p class="text-sm sm:text-base font-semibold text-slate-900 leading-relaxed mb-4 whitespace-pre-line">
+              ${escapeHtml(item.questionText)}
+            </p>
+
+            <div class="grid grid-cols-1 ${!item.isCorrect ? "md:grid-cols-2" : ""} gap-3">
+              ${userChoiceBox}
+              ${correctKeyBox}
+            </div>
+          </article>
+        `;
+          })
+          .join("");
+
+        mainEl.innerHTML = `
+        <section class="max-w-4xl mx-auto animate-view">
+
+          <!-- HEADER SKOR & METRIK REALTIME -->
+          <div class="bg-white rounded-2xl border border-[#E2E8F0] shadow-sm p-6 sm:p-8 mb-6">
+            <div class="flex flex-col items-center justify-center text-center py-4">
+              <span class="text-xs font-bold uppercase tracking-widest text-slate-500">Skor Akhir</span>
+              <div class="text-6xl sm:text-7xl font-extrabold tracking-tight my-2.5 ${scoreColorClass}">
+                ${result.finalScore}
+              </div>
+              <div class="flex items-center justify-center gap-3 mt-1 text-xs sm:text-sm font-semibold">
+                <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#ECFDF5] text-[#10B981] border border-emerald-200">
+                  ✓ ${result.correctCount} Benar
+                </span>
+                <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#FEF2F2] text-[#EF4444] border border-red-200">
+                  ✕ ${result.wrongOrEmptyCount} Salah
+                </span>
+              </div>
+            </div>
+
+            <!-- 3 Tombol Aksi Navigasi -->
+            <div class="mt-6 pt-6 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-3">
+              <div class="w-full sm:w-auto flex flex-col sm:flex-row items-center gap-2.5">
+                <!-- 1. Ulangi -->
+                <button
+                  type="button"
+                  onclick="handleRetryAllQuestions()"
+                  class="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold text-white bg-[#2563EB] hover:bg-[#1D4ED8] shadow-xs transition">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                  <span>Ulangi</span>
+                </button>
+
+                <!-- 2. Evaluasi (Drill Mode) -->
+                <button
+                  type="button"
+                  onclick="handleRetryWrongOnly()"
+                  ${!hasWrongOrEmpty ? "disabled" : ""}
+                  class="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold border transition ${
+                    hasWrongOrEmpty
+                      ? "bg-amber-50 text-amber-800 border-amber-300 hover:bg-amber-100 shadow-2xs"
+                      : "bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed"
+                  }">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                  <span>
+                    ${hasWrongOrEmpty ? `Evaluasi (${result.wrongOrEmptyCount} Soal)` : "Semua Jawaban Sudah Benar 🎉"}
+                  </span>
+                </button>
+              </div>
+
+              <!-- 3. Kembali ke Beranda -->
+              <button
+                type="button"
+                onclick="navigateToHome()"
+                class="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-semibold text-slate-700 bg-white hover:bg-slate-50 border border-[#E2E8F0] transition">
+                <span>Kembali ke Beranda</span>
+              </button>
+            </div>
+          </div>  
+
+          <div class="space-y-4">
+            ${reviewCardsHtml}
+          </div>
+
+        </section>
+
+        <!-- Tombol Bulat Scroll ke Paling Atas (Khusus Halaman Evaluasi) -->
+        <button
+          type="button"
+          onclick="window.scrollTo({ top: 0, behavior: 'smooth' })"
+          title="Scroll ke Paling Atas"
+          aria-label="Scroll ke Paling Atas"
+          class="fixed bottom-6 right-6 z-50 w-12 h-12 rounded-full bg-[#2563EB] hover:bg-[#1D4ED8] text-white shadow-lg hover:shadow-xl flex items-center justify-center transition-all duration-200 hover:-translate-y-0.5 active:scale-95 cursor-pointer">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M5 15l7-7 7 7"/>
+          </svg>
+        </button>
+      `;
+      }
+
+      /*************************************************************************
+       * 10. KEYBOARD SHORTCUTS (EXAM VIEW: A-E Pilih Opsi, Panah Navigasi)
+       *************************************************************************/
+      window.addEventListener("keydown", (event) => {
+        // Abaikan shortcut jika tidak di halaman EXAM, atau jika modal sedang terbuka
+        if (state.view !== "EXAM") return;
+        const modalRoot = document.getElementById("modal-root");
+        if (modalRoot && !modalRoot.classList.contains("hidden")) return;
+
+        // Abaikan jika user sedang mengetik di input/textarea
+        const activeTag = document.activeElement
+          ? document.activeElement.tagName.toLowerCase()
+          : "";
+        if (
+          activeTag === "input" ||
+          activeTag === "textarea" ||
+          activeTag === "select"
+        )
+          return;
+
+        const questions = state.examSession.questions;
+        const currentIdx = state.activeQuestionIndex;
+        const activeQuestion = questions[currentIdx];
+        if (!activeQuestion) return;
+
+        const key = event.key.toUpperCase();
+
+        // Shortcut A, B, C, D, E untuk memilih jawaban sesuai urutan tampilan layar
+        const letterIndex = OPTION_LETTERS.indexOf(key);
+        if (letterIndex !== -1 && activeQuestion.options[letterIndex]) {
+          event.preventDefault();
+          const chosenOption = activeQuestion.options[letterIndex];
+          selectExamOption(activeQuestion.id, chosenOption.id);
+          return;
+        }
+
+        // Shortcut Panah Kiri (←) dan Panah Kanan (→) untuk berpindah soal
+        if (event.key === "ArrowLeft") {
+          event.preventDefault();
+          if (currentIdx > 0) {
+            goToQuestionIndex(currentIdx - 1);
+          }
+        } else if (event.key === "ArrowRight") {
+          event.preventDefault();
+          if (currentIdx < questions.length - 1) {
+            goToQuestionIndex(currentIdx + 1);
+          }
+        }
+      });
+
+      /*************************************************************************
+       * 11. MASTER RENDERER & INITIALIZATION
+       *************************************************************************/
+      function renderApp() {
+        const mainEl = document.getElementById("app-main");
+        if (mainEl) {
+          mainEl.className =
+            state.view === "EXAM"
+              ? "flex-1 w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-4"
+              : "flex-1 w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8";
+        }
+        renderHeader();
+        if (state.view === "HOME") {
+          renderHome();
+        } else if (state.view === "EDITOR") {
+          renderEditor();
+        } else if (state.view === "EXAM") {
+          renderExam();
+        } else if (state.view === "EVALUATION") {
+          renderEvaluation();
+        }
+      }
+
+      // Bootstrapping aplikasi saat halaman selesai dimuat
+      document.addEventListener("DOMContentLoaded", () => {
+        loadQuizzesFromStorage();
+        renderApp();
+      });
+    </script>
+  </body>
+</html>
